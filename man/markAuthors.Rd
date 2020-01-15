@@ -83,15 +83,21 @@ function (ddResult, mappedValues)
         if (length(abs2) > 1) {
             abs2 = abs2[1]
         }
-        if (abs1 != "") {
+        # Wenn ein Abstract gefunden wurde
+        # Markiere Autor
+        if (length(abs1 != 0)) {
+          if (abs1 != "") {
             authorA = paste("*", authorA, sep = "")
-            print(paste("-A-", authorA, sep = " "))
-            ddResult[i, ]$A = as.character(authorA)
+            print(paste('-A-', authorA, sep = ' '))
+            ddResult[i,]$A = as.character(authorA)
+          }
         }
-        if (abs2 != "") {
+        if (length(abs2) != 0) {
+          if (abs2 != "") {
             authorB = paste("*", authorB, sep = "")
-            print(paste("-B-", authorB, sep = " "))
-            ddResult[i, ]$B = as.character(authorB)
+            print(paste('-B-', authorB, sep = ' '))
+            ddResult[i,]$B = as.character(authorB)
+          }
         }
     }
     return(ddResult)
