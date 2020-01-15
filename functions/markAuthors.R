@@ -52,7 +52,7 @@ markAuthors <- function(ddResult, mappedValues) {
 
     # Wenn ein Abstract gefunden wurde
     # Markiere Autor
-    if (length(abs1 != 0)) {
+    if (length(abs1) != 0) {
       if (abs1 != "") {
         authorA = paste("*", authorA, sep = "")
         print(paste('-A-', authorA, sep = ' '))
