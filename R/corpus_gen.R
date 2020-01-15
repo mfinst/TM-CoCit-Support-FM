@@ -5,7 +5,7 @@ function(data.vector, lang, furtherStops = NULL) {
 
   # Verarbeitungsschritte mit tm_map
   corpus = tm::tm_map(corpus, tm::content_transformer(base::tolower))
-  corpus = tm::tm_map(corpus, base::stripWhitespace)
+  corpus = tm::tm_map(corpus, tm::stripWhitespace)
   corpus = tm::tm_map(corpus, tm::removePunctuation)
   corpus = tm::tm_map(corpus, tm::stemDocument, lang)
   corpus = tm::tm_map(corpus, tm::removeWords, stopwords(lang))
