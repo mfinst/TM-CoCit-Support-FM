@@ -1,16 +1,19 @@
-rebuild_data_source_cocit <-
-function(paperTable) {
-  start_time = Sys.time() # Zeit Benchmark
-  
-  # Initialisierung
-  PNos = paperTable$Papern.No # Ein vektor für alle Paper.No
-  papersLength = length(PNos) # Anzahl der Paper
-  #papersLength = 50 # Fixed Iterationen für Debugging
-  CRPlaceholder = "0"
-  
-  # Zitations Tracker
+function(paperTable, ignoreCRs = FALSE) {
+  start_time = Sys.time()
+  # init stuff
+  CRInt = 1
+  # vectorize
+  #authors = paperTable$AU
+  PNos = paperTable$Papern.No
+  CRs = paperTable$CR
+  # init empty for rbind
+  result = vector(mode="character", length=0)
+  # iterate over every paper
+  papersLength = length(PNos)
+  #papersLength = 50
+  # global Citation tracker
   allCRs = as.data.frame( x = c(), autor = c(), jahr = c(), journal = c(), version = c(), seite = c(),  CR = c(), DOI = c(), stringsAsFactors = FALSE)
-  allCRs = rbind(allCRs, c("x","autor","jahr","journal","version","seite","CR","DOI")) # Hinzufügen einer pseudo Spalte, da sonst die Namen verschwienden
+  allCRs = rbind(allCRs, c("x","autor","jahr","journal","version","seite","CR","DOI"))
   allCRs = type.convert(x = allCRs, as.is = TRUE)
   allIgnoredCits = vector(mode="character", length=0)
   names(allCRs)[1] = "x"
@@ -21,95 +24,163 @@ function(paperTable) {
   names(allCRs)[6] = "seite"
   names(allCRs)[7] = "CR"
   names(allCRs)[8] = "DOI"
-  
-  # Main Loop
+  includeInt = 0
+  errorCounter = 0
+  errorCits = vector(mode="character", length = 0)
+  # for testing; only the first two papers
+  #for(i in 1:50) {
+    # for productive
   for(i in 1:papersLength) {
-    print(paste(i, "of", papersLength)) # Anzeige welche Publikation grade extrahiert wird
-    
-    # Zerlegen aller Zitationen in eine Liste von Strings
-    cocits = strsplit(x = as.character(CRs[i]), split = ";")
+    # Progress Print
+    print(paste(i, "of", papersLength))
+    cocit = strsplit(x = as.character(CRs[i]), split = ";")
     rows = vector(mode="character", length=0)
-    
-    # Überspringe Paper ohne Zitationen
-    if (length(cocits[[1]] > 0)){
-      
-      # Iteriere über die Liste der Zitationen
-      for(y in 1:length(cocits[[1]])) {
-        
-        # Zerlege Zitations String in seine Bestandteile
-        citationInfoList = strsplit(cocits[[1]][y], ",")
-        
-        # Bestimme DOI
-        DOI = grep(x = citationInfoList[[1]], pattern = "DOI ", value = TRUE) # finde alle DOIs
-        if (length(DOI) == 0 ) {
-          # DOI ist Leer
-          DOI = ''
+    # skip empty rows
+    if (length(cocit[[1]] > 0)){
+      # generate row
+      for(y in 1:length(cocit[[1]])) {
+        # extract infos
+        # split seperate Lines
+        # retriev infos
+        infos = strsplit(cocit[[1]][y], ",")
+        # find DOI
+        possibleDOI = grep(x = infos[[1]], pattern = "DOI ", value = TRUE)
+        if (length(possibleDOI) == 0 ) {
+          # DOI is empty
+          possibleDOI = ''
         } 
         else {
-          # DOI ist nicht leer
-          # Prüfe ob mehrere DOIs gefunden wurden
-          if (length(DOI) > 1) {
-            DOI = DOI[1] # selektiere das erste DOI
-            DOI = gsub("\\[", "", x = DOI)
+          # detect if more than one is found
+          if (length(possibleDOI) > 1) {
+            possibleDOI = possibleDOI[1]
+            possibleDOI = gsub("\\[", "", x = possibleDOI)
           }
-          DOI = gsub("DOI ", "", x = DOI) # entferne den String DOI
+          possibleDOI = gsub("DOI ", "", x = possibleDOI)
+          # trimws(possibleDOI)
         }
-        
-        #CR = CRInt # Lege Zitationsnummer fest
-        
-        author = trimws(citationInfoList[[1]][1]) # Autor aus erster Stelle der Zitation
-        year = trimws(citationInfoList[[1]][2]) # Jahreszahl aus zweiter Stelle der Zitation
-        
-        # Prüfe: Ist es eine Jahreszahl?
+        CR = CRInt
+        author = trimws(infos[[1]][1])
+        year = trimws(infos[[1]][2])
+        # nchar(year) != 4
         if (is.na(as.numeric(year))) {
-          year = "None" # Wenn keine Jahreszahl gefunden wurde
+          # string to long, to short or not a number
+          year = "None"
         } 
-        
-        # Prüfe: Journal an der dritten Stelle steht
-        if (length(citationInfoList[[1]]) >= 3) {
-          journal = trimws(citationInfoList[[1]][3])
+        if (length(infos[[1]]) >= 3) {
+          journal = trimws(infos[[1]][3])
         } else {
           journal = ""
         }
-        
-        # Prüfe: Version an vierter Stelle steht
-        if (length(citationInfoList[[1]]) >= 4) {
-          version = trimws(citationInfoList[[1]][4])
+        if (length(infos[[1]]) >= 4) {
+          version = trimws(infos[[1]][4])
           if (!startsWith(version, "V")) {
             version = ""
           }
         } else {
           version = ""
         }
-        
-        # Prüfe: Seitenanzahl an fünfter Stelle steht
-        if (length(citationInfoList[[1]]) >= 5) {
-          seite = trimws(citationInfoList[[1]][5])
+        if (length(infos[[1]]) >= 5) {
+          seite = trimws(infos[[1]][5])
           if (!startsWith(seite, "P")) {
             seite = ""
           }
         } else {
           seite = ""
         }
+        if (!ignoreCRs) {
+          #authYearCombo = paste(author, year, sep = " ")
+          # check if zitation ist bereits aufgetreten!
+          
+          foundCR = allCRs$CR[(allCRs$author == author & allCRs$year == year)]
+          foundJournal = allCRs$journal[(allCRs$author == author & allCRs$year == year)]
+          foundVersion = allCRs$version[(allCRs$author == author & allCRs$year == year)]
+          foundSeite = allCRs$seite[(allCRs$author == author & allCRs$year == year)]
+          foundDOI = allCRs$DOI[(allCRs$author == author & allCRs$year == year)]
+          newCitation = FALSE
+          if (length(foundCR) < 1 || author =="[Anonymous]") {
+            newCitation = TRUE
+          } else if (foundDOI == possibleDOI) {
+            newCitation = FALSE
+            #Journal Check
+          } else if (grepl(journal, foundJournal, fixed = TRUE) || grepl(foundJournal, journal, fixed = TRUE)) {
+            newCitation = FALSE
+          } else {
+            newCitation = FALSE
+          }
+          
+          if (newCitation) {
+            # make row for Citation table
+            allCRs = rbind(allCRs, c(
+              as.character(PNos[i]),
+              as.character(author),
+              as.character(year),
+              as.character(journal),
+              as.character(version),
+              as.character(seite),
+              as.character(CR),
+              as.character(possibleDOI)
+            ))
+            includeInt = includeInt + 1
+            CR = CRInt
+            CRInt = CRInt + 1
+          } else {
+            CR = foundCR[1]
+          }
+        } else {
+          # all CRs 0 for debugging cases
+          allCRs = rbind(allCRs, c(
+            as.character(PNos[i]),
+            as.character(author),
+            as.character(year),
+            as.character(journal),
+            as.character(version),
+            as.character(seite),
+            as.character(CR),
+            as.character(possibleDOI)
+          ))
+          includeInt = 0
+          CR = 0
+          CRInt = 0
+        }
         
-        # Füge Zitation dem Ergebnis hinzu
-        allCRs = rbind(allCRs, c(
+        newRow = c(
           as.character(PNos[i]),
-          as.character(author),
-          as.character(year),
-          as.character(journal),
-          as.character(version),
-          as.character(seite),
-          as.character(CRPlaceholder), 
-          as.character(DOI)
-        ))
+          paste('CR', CR, sep = ""),
+          author,
+          year,
+          possibleDOI)
+        
+        if (!length(newRow) == 5) {
+          print(paste("differing Length", length(newRow)))
+          print(newRow)
+        }
+        rows = rbind(rows, newRow)
       }
+      # add row to result
+      result = rbind(result, rows)
     }
   }
-  # Laufzeit Reminder
+  # runtime evaluation
   end_time = Sys.time()
   final_time = end_time - start_time
-  print(final_time) # Gibt die akkumulierte Laufzeit zurück
-  
-  return(allCRs)
+  print(final_time)
+  # build result frame!
+  result = data.frame(result, row.names = NULL)
+  names(result)[1] = "PNo"
+  names(result)[2] = "CRNo"
+  names(result)[3] = "Autor"
+  names(result)[4] = "Jahr"
+  names(result)[5] = "DOI"
+  # errors
+  #print(allCRs)
+  # run again!
+  #finalIgnoredCRsDF = data.frame(allCRs, row.names = NULL, stringsAsFactors = FALSE)
+  if (ignoreCRs) {
+    return(allCRs)
+  }
+  if ( errorCounter > 0) {
+    print(paste(errorCounter, 'Errors detected'))
+    return(list(result, errorCits))
+  }
+  return(result)
 }
