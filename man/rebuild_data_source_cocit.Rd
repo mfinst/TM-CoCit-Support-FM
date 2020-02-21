@@ -8,7 +8,7 @@ Rebuild CoCit from papern
 This function builds a cocitations Table with DOI Information based on a paperTable. The Papers are normally extracted from the Web of Knowledge in csv Format. Make sure to add a row with Paper numbers as these are required to run the function.
 }
 \usage{
-rebuild_data_source_cocit(paperTable)
+rebuild_data_source_cocit(paperTable, ignoreCRs)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -16,6 +16,7 @@ rebuild_data_source_cocit(paperTable)
 An imported csv table from web of knowledge with papern.No for each Row. File can be read like this: read.csv("file", sep = ";", header = TRUE, skip = 1)
 Make sure to add a column with the Name Papern.No. This row will be used to assign the citations to a paper in the generation
 }
+  \item{ignoreCRs}{old}
 }
 \details{
 Attention, this function can run for more than an hour based on the number ob papers given. It can run around 1 hour for around 9000 inidivual papers.
@@ -55,10 +56,11 @@ MFinst
 ##--	or do  help(data=index)  for the standard data sets.
 
 ## The function is currently defined as
-function (paperTable)
+function (paperTable, ignoreCRs = FALSE)
 {
     start_time = Sys.time()
     PNos = paperTable$Papern.No
+    CRs = paperTable$CR
     papersLength = length(PNos)
     CRPlaceholder = "0"
     allCRs = as.data.frame(x = c(), autor = c(), jahr = c(),

@@ -1,3 +1,4 @@
+rebuild_data_source_cocit <-
 function(paperTable, ignoreCRs = FALSE) {
   start_time = Sys.time()
   # init stuff
@@ -48,7 +49,7 @@ function(paperTable, ignoreCRs = FALSE) {
         if (length(possibleDOI) == 0 ) {
           # DOI is empty
           possibleDOI = ''
-        } 
+        }
         else {
           # detect if more than one is found
           if (length(possibleDOI) > 1) {
@@ -65,7 +66,7 @@ function(paperTable, ignoreCRs = FALSE) {
         if (is.na(as.numeric(year))) {
           # string to long, to short or not a number
           year = "None"
-        } 
+        }
         if (length(infos[[1]]) >= 3) {
           journal = trimws(infos[[1]][3])
         } else {
@@ -90,7 +91,7 @@ function(paperTable, ignoreCRs = FALSE) {
         if (!ignoreCRs) {
           #authYearCombo = paste(author, year, sep = " ")
           # check if zitation ist bereits aufgetreten!
-          
+
           foundCR = allCRs$CR[(allCRs$author == author & allCRs$year == year)]
           foundJournal = allCRs$journal[(allCRs$author == author & allCRs$year == year)]
           foundVersion = allCRs$version[(allCRs$author == author & allCRs$year == year)]
@@ -107,7 +108,7 @@ function(paperTable, ignoreCRs = FALSE) {
           } else {
             newCitation = FALSE
           }
-          
+
           if (newCitation) {
             # make row for Citation table
             allCRs = rbind(allCRs, c(
@@ -142,14 +143,14 @@ function(paperTable, ignoreCRs = FALSE) {
           CR = 0
           CRInt = 0
         }
-        
+
         newRow = c(
           as.character(PNos[i]),
           paste('CR', CR, sep = ""),
           author,
           year,
           possibleDOI)
-        
+
         if (!length(newRow) == 5) {
           print(paste("differing Length", length(newRow)))
           print(newRow)
