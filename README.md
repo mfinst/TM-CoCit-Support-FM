@@ -23,11 +23,11 @@ R Packages
 Um die Funktionsweise des Pakets darzustellen wird anhand eine erweiterten Suchanfrage eine Extraktion durchgeführt.
 Zunächst lädt man einen Datensatz aus dem Web of Knowledge herunter. In diesem Fall laden wir mithilfe einer erweiterten Suchanfrage eine Sammlung von Publikationen zum Thema Business Intelligence.
 
-![](https://github.com/mfinst/TM-CoCit-Support-FM/blob/master/images/Export.PNG "Exported Data")
+![](https://github.com/mfinst/TM-CoCit-Support-FM/blob/master/images/Query.PNG "Exported Data")
 
 Da das Thema relativ umfangreich behandelt wurde werden wir die Suchanfrage bis zum Jahr 2012 eingrenzen.
 
-![](https://github.com/mfinst/TM-CoCit-Support-FM/blob/master/images/Query.PNG "Exported Data")
+![](https://github.com/mfinst/TM-CoCit-Support-FM/blob/master/images/Export.PNG "Exported Data")
 
 
 Web of Knowledge speichert die exportierten Datensätze immer als savedrecs.txt.
