@@ -91,8 +91,12 @@ assign_citation_numbers <-
                     for (j in 1:length(unique_journals_for_autor)) {
                       single_journal = unique_journals_for_autor[j] # einzelnes Journal
                       
-                      
-                      isSimilar = grepl(single_journal, journal, fixed = TRUE) # Pr?fe ob das Journal ?hnlich mit dem aktuellen Journal ist
+                      if (is.na(single_journal) || is.na(journal)) {
+                        isSimilar = FALSE
+                      } else {
+                        isSimilar = grepl(single_journal,
+                                          journal, fixed = TRUE)
+                      }
                       
                       if (isSimilar) {
                         # Journal ist ?hnlich
