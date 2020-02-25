@@ -206,10 +206,10 @@ assign_citation_numbers <-
     print(final_time)
     
     cits = cits[-1,]
-    colnames(cits)[2] = 'PNo'
-    colnames(cits)[3] = 'Autor'
-    colnames(cits)[4] = 'Jahr'
-    colnames(cits)[8] = 'CRNo'
+    colnames(cits)[1] = 'PNo'
+    colnames(cits)[2] = 'Autor'
+    colnames(cits)[3] = 'Jahr'
+    colnames(cits)[7] = 'CRNo'
     
     return(cits)
   }
