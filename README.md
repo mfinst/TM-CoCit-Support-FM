@@ -57,27 +57,95 @@ write.csv2(extracted_data, file = "papers.csv")
 
 ### Text Mining
 
-An dieser Stelle ist es nötig mit den Zitationen ein Co-Zitationsnetzwerk zu berechnen Datensatz. Dies kann die hier dargestellte Bibliothek nicht, da dieser Prozess von dem eigenen Zeil abhängig ist.
+An dieser Stelle ist es nötig mit den Zitationen ein Co-Zitationsnetzwerk zu berechnen. Dies kann die hier dargestellte Bibliothek nicht, da dieser Prozess von dem eigenen Ziel abhängig ist.
 
-Nachdem die Strukturen berechnet wurden ist es nötig, dass die DOIs zu jeder relevanten Zitation zugeordnet sind, da sonst keine adäquate Möglichkeit besteht die Zitationen zu Publikationen zuzuordnen.
+**Die Co-Zitationen lassen sich für den vorliegenden Datensatz mit einer Mindestanzahl der Zitationen von 4 berechnen.**
 
-Aus den relevanten Zitationen wird anschließend eine Suchabfrage für das Web of Knowledge erstellt die unter Erweiterter Suche eingegeben werden kann.
-* BILD
+Dabei wird folgende Struktur für die weitere Verarbeitung vorrausgesetzt:
 
-Die Daten dieses Exports enthalten für die Selektion alle relevanten Publikationen.
-Wichtig ist nun eine Markierung der Abstracts zu den Clustergruppen. Wenn der Graph mit dem igraph Package erstellt wurde dann können  die Funktionen des Pakets verwendet werden.
-* CODE
 
-Anschließend werden die Zuweisungen und Text Mining Strukturen erstellt.
-* CODE
+|A|B|A_DOI|B_DOI|ANZ|ANZC1|ANZC2|CCV|
+|---|---|---|---|---|---|---|---|
+|Autor, Jahr Kombinationen der Zitationen|Autor, Jahr Kombinationen der Zitationen|DOI von A|DOI von B|Anzahl der Co Zitationen|Anzahl der Co Zitationen von A|Anzahl der Co Zitationen von B|Co Zitationswert|
 
-Nun sind alle relevanten Informationen in einer Text Mining Struktur eingetragen. Die Daten können nun beliebig verknüpft werden.
+Mit einer solchen Tabelle lässt sich ein Graph mit dem *igraph* Paket berechnen.
+```R
+cocit_vertices <- unique(data.frame(c(table$A , table$B),c(table$ANZC1 , table$ANZC2)))
+cocit_graph <- graph.data.frame(table, directed=FALSE, vertices=cocit_vertices)
+wckarate <- walktrap.community(graph)
+
+sapply(unique(membership(wckarate)), function(gg) {
+  subg1<-induced.subgraph(graph, which(membership(wckarate)==gg)) 
+  ecount(subg1)/ecount(graph)
+})
+```
+Mit diesem Codefragment lassen sich die benötigten Strukturen bauen anhand denen das Text Mining durchgeführt werden kann.
+
+Nachdem die benötigten Abstracts über die erweiterte Suchabfrage aus dem Web of Knowledge geladen wurden können mit ein paar Funktionsaufrufen entsprechende Strukturen gebaut werden.
+
+```R
+colors <- c("red", "blue", "green")
+
+biggestGroupsSorted <- sort(table(mapAuthorToDOI(wckarate)[,1]), decreasing = TRUE)
+colb <- arrangeColors(colorVector=colors, groupSizes=biggestGroupsSorted)
+cocit_TF <- build_structure_for_list(structKey = "tf", 
+                                     gen_cocit_corpuslist(mapAuthorToDOI(wckarate)), tokenizer = phraseTokenizer)
+``` 
+* **colors** werden benötigt um im späteren Plot die Knoten der größten Netzwerke einzufärben.
+* **biggestGroupsSorted** ermittelt die größten Gruppen und sortiert diese
+* **cocit_TF** enthält letzendlich die erstellten Text Mining Strukturen als sortierte Term Frequenz Matrix
+
+Anschließend lassen sich die Informationen in einem Graphen darstellen.
+
+```R
+plot(
+  wckarate,
+  col=colb[membership(wckarate)], 
+  vertex.size=4+V(graph)$ANZ %/% 2.5*1,
+  vertex.label.dist=0.6, 
+  vertex.label.cex=0.7, 
+  vertex.label.degree=0, 
+  layout=layout.fruchterman.reingold, graph, 
+  edge.width=E(graph)$CCV*20, 
+)
+```
+Wenn das *igraph* Paket geladen ist, wird die plot Funktion für das ipgrah Objekt angewandt und ein Plot erstellt.
+Der Graph sieht anschließend ungefähr so aus:
+
+![](https://github.com/mfinst/TM-CoCit-Support-FM/blob/master/images/graph_no_text_mining.png "Co Zitationsgraph")
+
+Die tatsächlichen Gruppen können je nach Berechnung und Selektion des Cozitationswerts abweichen.
+
 
 ### Text Mining Verküpfung mit Co-Zitationsnetzwerkgraph von igraph
 
-Wurden der Graph mit igraph erstellt können mit den folgenden Schritten die Daten kombiniert werden.
-* Code
+Die Daten können als Legende im gleichen Plot angezeigt werden.
 
+```R
+x_interspace <- 0.3
+y_interspace <- 0.3
+tf_length <- 20
+text_width <- 0.25
+legend(x = 1.15, y = 1.25, 
+       legend = unlist(type.convert(head(cocit_TF[[as.numeric(names(biggestGroupsSorted)[1])]], tf_length), as.is = TRUE)),
+       x.intersp = x_interspace,
+       y.intersp = y_interspace,
+       ncol = 2,
+       box.col = colb[as.numeric(names(biggestGroupsSorted)[1])],
+       box.lty = 2,
+       box.lwd = 2,
+       text.width = text_width
+)
+```
+Dies sollte anschließend wiefolgt aussehen:
 
+![](https://github.com/mfinst/TM-CoCit-Support-FM/blob/master/images/graph.png "Graph with Text Mining")
+
+Es lohnt sich die intersp Werte auszulagern, da für jede weiteres Netzwerk eine weitere Legende dargestellt werden muss.
+
+Zudem müssen jenachdem wieviele Werte dargestellt werden sollen die einzelnen Parameter angepasst werden.
+
+Zusätzlich muss die x und y position individuell angepasst werden, jenachdem wie der Graph aussieht.
+
+Es kann auch nötig sein die Informationen über eine Clustergruppe in einem einzelnen Plot darzustellen. Für diesen Fall lässt sich die **cocit_TF** mit index zur jeweiligen Clustergruppe in einem Plot der Wahl darstellen.
 ## English
-
