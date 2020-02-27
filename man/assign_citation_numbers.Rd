@@ -198,6 +198,13 @@ MFinst
     end_time = Sys.time()
     final_time = end_time - start_time
     print(final_time)
+    
+      cits = cits[-1,]
+      colnames(cits)[2] = 'PNo'
+      colnames(cits)[3] = 'Autor'
+      colnames(cits)[4] = 'Jahr'
+      colnames(cits)[8] = 'CRNo'
+    
     return(cits)
   }
 }

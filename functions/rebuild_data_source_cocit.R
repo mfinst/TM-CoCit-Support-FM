@@ -185,6 +185,8 @@ function(paperTable, ignoreCRs = FALSE) {
   # run again!
   #finalIgnoredCRsDF = data.frame(allCRs, row.names = NULL, stringsAsFactors = FALSE)
   if (ignoreCRs) {
+    allCRs = allCRs[-1,]
+    colnames(allCRs)[1] = "PNo"
     return(allCRs)
   }
   if ( errorCounter > 0) {

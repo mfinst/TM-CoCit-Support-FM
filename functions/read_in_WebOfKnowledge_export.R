@@ -1,7 +1,6 @@
 read_in_WebOfKnowledge_export <-
   function(fileName = "savedrecs.txt",
-           seperator = "\t",
-           generate_PaperNo_Row = TRUE) {
+           seperator = "\t") {
     WoK_extracted = read.csv(
       fileName,
       header = TRUE,
@@ -14,8 +13,6 @@ read_in_WebOfKnowledge_export <-
       quote = "",
       fill = FALSE
     )
-    if (generate_PaperNo_Row) {
-       WoK_extracted$Papern.No = seq.int(nrow(WoK_extracted))
-    }
+    WoK_extracted$Papern.No = seq.int(nrow(WoK_extracted))
     return(WoK_extracted)
   }
